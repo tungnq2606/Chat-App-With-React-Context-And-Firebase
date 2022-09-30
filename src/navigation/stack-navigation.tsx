@@ -3,7 +3,7 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {NavigationContainer} from '@react-navigation/native';
 import {LoginScreen, GiftedChatScreen, RegisterScreen} from '../screens';
 import Provider from '../store/provider';
-import AppLoading from '../components/app-loading';
+import {AppLoading} from '../components';
 
 const StackNavigation: React.FC = () => {
   const Stack = createNativeStackNavigator();

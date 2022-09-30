@@ -1,50 +1,136 @@
 import {
   Text,
   SafeAreaView,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
+  Alert,
 } from 'react-native';
-import React, {useState} from 'react';
+import {useNavigation} from '@react-navigation/native';
+import firestore from '@react-native-firebase/firestore';
+import React from 'react';
+import {useForm} from 'react-hook-form';
+import {yupResolver} from '@hookform/resolvers/yup';
+
 import {useUser} from '../../hooks/use-user';
 import {ActionType} from '../../store/action';
-import {useNavigation} from '@react-navigation/native';
+import {User} from '../../interfaces/user-interface';
+import {registerSchema} from '../../schema';
+import {ControlInput} from '../../components';
+
+interface Info extends User {
+  displayName: string;
+  confirmPassword: string;
+}
+
+enum defaultValues {
+  username = '',
+  password = '',
+  displayName = '',
+  confirmPassword = '',
+}
 
 const RegisterScreen: React.FC = () => {
-  const {state, dispatch} = useUser();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const {dispatch} = useUser();
   const navigation = useNavigation();
-
-  const onChangeUsername = (text: string) => {
-    setUsername(text);
-  };
-
-  const onChangePassword = (text: string) => {
-    setPassword(text);
-  };
+  const {
+    handleSubmit,
+    formState: {errors},
+    control,
+    reset,
+  } = useForm<Info>({
+    resolver: yupResolver(registerSchema),
+    defaultValues,
+  });
 
   const onLogin = () => {
     navigation.goBack();
   };
 
+  const createRegisterSuccessAlert = () =>
+    Alert.alert('Đăng ký thành công', '', [
+      {
+        text: 'Đăng nhập ngay',
+        onPress: onLogin,
+      },
+      {
+        text: 'Huỷ',
+      },
+    ]);
+
+  const onSubmit = async (data: Info) => {
+    const {username, password, displayName} = data;
+    dispatch({
+      type: ActionType.SHOW_LOADING,
+    });
+    const users = await firestore().collection('users').get();
+    const user = users.docs.find(item => item.data().username === username);
+    if (user) {
+      dispatch({
+        type: ActionType.HIDE_LOADING,
+      });
+      reset();
+      Alert.alert('Tên đăng nhập đã tồn tại');
+    } else {
+      firestore()
+        .collection('users')
+        .add({
+          displayName,
+          username,
+          password,
+        })
+        .then(() => {
+          reset();
+          dispatch({
+            type: ActionType.HIDE_LOADING,
+          });
+          createRegisterSuccessAlert();
+        });
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.appName}>Đăng ký ngay</Text>
-      <TextInput
+      <ControlInput
+        name="displayName"
+        control={control}
+        errors={errors}
+        placeholder="Tên hiển thị"
+        style={styles.input}
+        autoCapitalize="none"
+      />
+      <ControlInput
+        name="username"
+        control={control}
+        errors={errors}
         placeholder="Tên đăng nhập"
         style={styles.input}
-        value={username}
-        onChangeText={onChangeUsername}
+        autoCapitalize="none"
+        trim
       />
-      <TextInput
+      <ControlInput
+        name="password"
+        control={control}
+        errors={errors}
         placeholder="Mật khẩu"
         style={styles.input}
-        value={password}
-        onChangeText={onChangePassword}
+        autoCapitalize="none"
+        secureTextEntry
       />
-      <TouchableOpacity style={styles.button}>
-        <Text>Đăng ký</Text>
+      <ControlInput
+        name="confirmPassword"
+        control={control}
+        errors={errors}
+        placeholder="Nhập lại khẩu"
+        style={styles.input}
+        autoCapitalize="none"
+        secureTextEntry
+      />
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handleSubmit(onSubmit)}
+        activeOpacity={0.7}>
+        <Text style={styles.labelButton}>Đăng ký</Text>
       </TouchableOpacity>
       <Text>
         Đã có tài khoản?{' '}
@@ -68,26 +154,31 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   input: {
-    width: '80%',
+    width: '100%',
     height: 40,
     borderWidth: 1,
     borderColor: 'gray',
     borderRadius: 5,
-    marginVertical: 10,
     paddingHorizontal: 10,
   },
   button: {
     width: '80%',
     height: 40,
-    backgroundColor: '#7FBCD2',
+    backgroundColor: '#FFB72B',
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 5,
     marginBottom: 10,
+    marginTop: 20,
   },
   link: {
     color: '#F7A76C',
     fontWeight: 'bold',
+  },
+  labelButton: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
   },
 });
 

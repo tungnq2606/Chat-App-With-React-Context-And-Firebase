@@ -1,43 +1,46 @@
 import {
   Text,
   SafeAreaView,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   Alert,
 } from 'react-native';
-import React, {useState} from 'react';
+import React from 'react';
+import firestore from '@react-native-firebase/firestore';
+import {useNavigation} from '@react-navigation/native';
+import {useForm} from 'react-hook-form';
+import {yupResolver} from '@hookform/resolvers/yup';
+
 import {useUser} from '../../hooks/use-user';
 import {ActionType} from '../../store/action';
-import {useNavigation} from '@react-navigation/native';
-import firestore from '@react-native-firebase/firestore';
 import {User} from '../../interfaces/user-interface';
+import {ControlInput} from '../../components';
+import {loginSchema} from '../../schema';
 
+enum defaultValues {
+  username = '',
+  password = '',
+}
 const LoginScreen: React.FC = () => {
   const {dispatch} = useUser();
+  const {
+    handleSubmit,
+    formState: {errors},
+    control,
+    reset,
+  } = useForm<User>({
+    resolver: yupResolver(loginSchema),
+    defaultValues,
+  });
 
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
   const navigation = useNavigation();
-
-  const onChangeUsername = (text: string) => {
-    setUsername(text);
-  };
-
-  const onChangePassword = (text: string) => {
-    setPassword(text);
-  };
-
-  const clearInputs = () => {
-    setUsername('');
-    setPassword('');
-  };
 
   const onRegister = () => {
     navigation.navigate('Register' as never);
   };
 
-  const onLogin = () => {
+  const onSubmit = (data: User) => {
+    const {username, password} = data;
     dispatch({
       type: ActionType.SHOW_LOADING,
     });
@@ -48,18 +51,18 @@ const LoginScreen: React.FC = () => {
         dispatch({
           type: ActionType.HIDE_LOADING,
         });
-        clearInputs();
         if (querySnapshot.docs.length > 0) {
           const user = querySnapshot.docs.find(
             item =>
-              item.data().username === username &&
-              item.data().password === password,
+              item.data()?.username.toUpperCase() === username.toUpperCase() &&
+              item.data()?.password === password,
           );
           if (user) {
             dispatch({
               type: ActionType.LOGIN,
               payload: user.data() as User,
             });
+            reset(defaultValues);
             navigation.navigate('GiftedChat' as never);
           } else {
             Alert.alert('Tên đăng nhập hoặc mật khẩu không chính xác');
@@ -73,26 +76,29 @@ const LoginScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.appName}>Chat App With Context + Firebase</Text>
-      <TextInput
+      <ControlInput
+        name="username"
+        control={control}
+        errors={errors}
         placeholder="Tên đăng nhập"
         style={styles.input}
-        value={username}
-        onChangeText={onChangeUsername}
         autoCapitalize="none"
+        trim
       />
-      <TextInput
+      <ControlInput
+        name="password"
+        control={control}
+        errors={errors}
         placeholder="Mật khẩu"
         style={styles.input}
-        value={password}
-        onChangeText={onChangePassword}
         autoCapitalize="none"
         secureTextEntry
       />
       <TouchableOpacity
         style={styles.button}
         activeOpacity={0.7}
-        onPress={onLogin}>
-        <Text>Đăng nhập</Text>
+        onPress={handleSubmit(onSubmit)}>
+        <Text style={styles.labelButton}>Đăng nhập</Text>
       </TouchableOpacity>
       <Text>
         Chưa có tài khoản?{' '}
@@ -116,26 +122,31 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   input: {
-    width: '80%',
+    width: '100%',
     height: 40,
     borderWidth: 1,
     borderColor: 'gray',
     borderRadius: 5,
-    marginVertical: 10,
     paddingHorizontal: 10,
   },
   button: {
     width: '80%',
     height: 40,
-    backgroundColor: '#7FBCD2',
+    backgroundColor: '#FFB72B',
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 5,
     marginBottom: 10,
+    marginTop: 20,
   },
   link: {
     color: '#F7A76C',
     fontWeight: 'bold',
+  },
+  labelButton: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
   },
 });
 
