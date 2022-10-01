@@ -34,12 +34,13 @@ const RegisterScreen: React.FC = () => {
   const navigation = useNavigation();
   const {
     handleSubmit,
-    formState: {errors},
+    formState: {errors, isValid},
     control,
     reset,
   } = useForm<Info>({
     resolver: yupResolver(registerSchema),
     defaultValues,
+    mode: 'onChange',
   });
 
   const onLogin = () => {
@@ -128,6 +129,7 @@ const RegisterScreen: React.FC = () => {
       />
       <TouchableOpacity
         style={styles.button}
+        disabled={!isValid}
         onPress={handleSubmit(onSubmit)}
         activeOpacity={0.7}>
         <Text style={styles.labelButton}>Đăng ký</Text>

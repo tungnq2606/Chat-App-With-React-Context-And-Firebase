@@ -25,12 +25,13 @@ const LoginScreen: React.FC = () => {
   const {dispatch} = useUser();
   const {
     handleSubmit,
-    formState: {errors},
+    formState: {errors, isValid},
     control,
     reset,
   } = useForm<User>({
     resolver: yupResolver(loginSchema),
     defaultValues,
+    mode: 'onChange',
   });
 
   const navigation = useNavigation();
@@ -95,6 +96,7 @@ const LoginScreen: React.FC = () => {
         secureTextEntry
       />
       <TouchableOpacity
+        disabled={!isValid}
         style={styles.button}
         activeOpacity={0.7}
         onPress={handleSubmit(onSubmit)}>
