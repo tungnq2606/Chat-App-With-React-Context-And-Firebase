@@ -7,40 +7,38 @@ import {
 } from 'react-native';
 import React from 'react';
 import firestore from '@react-native-firebase/firestore';
-import {useNavigation} from '@react-navigation/native';
 import {useForm} from 'react-hook-form';
 import {yupResolver} from '@hookform/resolvers/yup';
 
 import {useUser} from '../../hooks/use-user';
 import {ActionType} from '../../store/action';
-import {User} from '../../interfaces/user-interface';
 import {ControlInput} from '../../components';
 import {loginSchema} from '../../schema';
+import {Account, LoginScreenProps} from '../../types';
 
 enum defaultValues {
   username = '',
   password = '',
 }
-const LoginScreen: React.FC = () => {
+
+const LoginScreen = ({navigation}: LoginScreenProps) => {
   const {dispatch} = useUser();
   const {
     handleSubmit,
     formState: {errors, isValid},
     control,
     reset,
-  } = useForm<User>({
+  } = useForm<Account>({
     resolver: yupResolver(loginSchema),
     defaultValues,
     mode: 'onChange',
   });
 
-  const navigation = useNavigation();
-
   const onRegister = () => {
-    navigation.navigate('Register' as never);
+    navigation.navigate('Register');
   };
 
-  const onSubmit = (data: User) => {
+  const onSubmit = (data: Account) => {
     const {username, password} = data;
     dispatch({
       type: ActionType.SHOW_LOADING,
@@ -52,6 +50,7 @@ const LoginScreen: React.FC = () => {
         dispatch({
           type: ActionType.HIDE_LOADING,
         });
+
         if (querySnapshot.docs.length > 0) {
           const user = querySnapshot.docs.find(
             item =>
@@ -59,9 +58,13 @@ const LoginScreen: React.FC = () => {
               item.data()?.password === password,
           );
           if (user) {
+            const payload = {
+              id: user.id,
+              displayName: user.data()?.displayName,
+            };
             dispatch({
               type: ActionType.LOGIN,
-              payload: user.data() as User,
+              payload,
             });
             reset(defaultValues);
             navigation.navigate('GiftedChat' as never);

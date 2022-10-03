@@ -5,7 +5,6 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
 import firestore from '@react-native-firebase/firestore';
 import React from 'react';
 import {useForm} from 'react-hook-form';
@@ -13,14 +12,14 @@ import {yupResolver} from '@hookform/resolvers/yup';
 
 import {useUser} from '../../hooks/use-user';
 import {ActionType} from '../../store/action';
-import {User} from '../../interfaces/user-interface';
 import {registerSchema} from '../../schema';
 import {ControlInput} from '../../components';
+import {Account, RegisterScreenProps} from '../../types';
 
-interface Info extends User {
+type Info = Account & {
   displayName: string;
   confirmPassword: string;
-}
+};
 
 enum defaultValues {
   username = '',
@@ -29,9 +28,8 @@ enum defaultValues {
   confirmPassword = '',
 }
 
-const RegisterScreen: React.FC = () => {
+const RegisterScreen = ({navigation}: RegisterScreenProps) => {
   const {dispatch} = useUser();
-  const navigation = useNavigation();
   const {
     handleSubmit,
     formState: {errors, isValid},

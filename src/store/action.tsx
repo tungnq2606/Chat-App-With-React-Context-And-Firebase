@@ -1,4 +1,4 @@
-import {User} from '../interfaces/user-interface';
+import {User} from '../types';
 
 export enum ActionType {
   LOGIN,

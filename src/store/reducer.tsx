@@ -1,10 +1,10 @@
-import {User} from '../interfaces/user-interface';
+import {User} from '../types';
 import {Action, ActionType} from './action';
 
-export interface State {
+export type State = {
   user: User;
   loading: boolean;
-}
+};
 
 export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
@@ -17,8 +17,8 @@ export const reducer = (state: State, action: Action): State => {
       return {
         ...state,
         user: {
-          username: '',
-          password: '',
+          id: '',
+          displayName: '',
         },
       };
     case ActionType.SHOW_LOADING:

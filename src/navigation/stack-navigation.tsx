@@ -5,13 +5,21 @@ import {LoginScreen, GiftedChatScreen, RegisterScreen} from '../screens';
 import Provider from '../store/provider';
 import {AppLoading} from '../components';
 
-const StackNavigation: React.FC = () => {
-  const Stack = createNativeStackNavigator();
+export type RootStackParamList = {
+  Login: undefined;
+  Register: undefined;
+  GiftedChat: undefined;
+};
+
+const StackNavigation = () => {
+  const Stack = createNativeStackNavigator<RootStackParamList>();
 
   return (
     <Provider>
       <NavigationContainer>
-        <Stack.Navigator screenOptions={{headerShown: false}}>
+        <Stack.Navigator
+          screenOptions={{headerShown: false}}
+          initialRouteName="GiftedChat">
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Register" component={RegisterScreen} />
           <Stack.Screen name="GiftedChat" component={GiftedChatScreen} />

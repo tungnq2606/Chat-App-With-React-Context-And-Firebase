@@ -2,14 +2,14 @@ import {StyleSheet, Text, TextInput, TextInputProps, View} from 'react-native';
 import React from 'react';
 import {Controller} from 'react-hook-form';
 
-interface Props extends TextInputProps {
+type Props = TextInputProps & {
   control: any;
   name: string;
   errors: any;
   trim?: boolean;
-}
+};
 
-const ControlInput = (props: Props) => {
+const ControlInput: React.FC<Props> = props => {
   const {control, name, errors, trim, ...rest} = props;
 
   return (

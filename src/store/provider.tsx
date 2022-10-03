@@ -2,14 +2,14 @@ import React, {createContext, useReducer} from 'react';
 import {Action} from './action';
 import {reducer, State} from './reducer';
 
-interface Props {
+type Props = {
   children: JSX.Element | JSX.Element[];
-}
+};
 
-interface ContextProps {
+type ContextProps = {
   state: State;
   dispatch: React.Dispatch<Action>;
-}
+};
 export const Context = createContext<ContextProps>({
   state: {} as State,
   dispatch: () => null,
@@ -17,8 +17,8 @@ export const Context = createContext<ContextProps>({
 
 const initialState: State = {
   user: {
-    username: 'Test',
-    password: '123',
+    id: '',
+    displayName: '',
   },
   loading: false,
 };
