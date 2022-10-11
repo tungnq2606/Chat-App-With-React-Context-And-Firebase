@@ -78,7 +78,7 @@ const GiftedChatListScreen = ({navigation}: GiftedChatListScreenProps) => {
   const keyExtractor = (item: MessageProps) => item.id;
   return (
     <SafeAreaView style={styles.container}>
-      <NavigationBar title="Tin nhắn" hiddenBackButton={false}>
+      <NavigationBar title="Tin nhắn" hiddenBackButton={true}>
         <View style={styles.searchContainer}>
           <FastImage source={ICONS.search} style={styles.searchIcon} />
           <TextInput placeholder="Tìm kiếm" style={styles.search} />
