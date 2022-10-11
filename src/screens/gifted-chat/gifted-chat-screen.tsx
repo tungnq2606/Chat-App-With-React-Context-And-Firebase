@@ -2,7 +2,7 @@ import React, {useState, useCallback, useEffect} from 'react';
 import {SafeAreaView} from 'react-native';
 import {GiftedChat} from 'react-native-gifted-chat';
 import {NavigationBar} from '../../components';
-import {GiftedChatScreenProps} from '../../types';
+import {useUser} from '../../hooks/use-user';
 
 type Message = {
   _id: number;
@@ -15,10 +15,9 @@ type Message = {
   };
 };
 
-const GiftedChatScreen = ({route}: GiftedChatScreenProps) => {
-  console.log(route);
-
+const GiftedChatScreen = () => {
   const [messages, setMessages] = useState<Message[]>([]);
+  const {state} = useUser();
 
   useEffect(() => {
     setMessages([

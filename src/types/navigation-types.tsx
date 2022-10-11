@@ -15,3 +15,8 @@ export type RegisterScreenProps = NativeStackScreenProps<
   RootStackParamList,
   'Register'
 >;
+
+export type GiftedChatListScreenProps = NativeStackScreenProps<
+  RootStackParamList,
+  'GiftedChatList'
+>;

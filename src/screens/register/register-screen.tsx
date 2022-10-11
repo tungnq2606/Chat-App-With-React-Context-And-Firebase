@@ -15,6 +15,8 @@ import {ActionType} from '../../store/action';
 import {registerSchema} from '../../schema';
 import {ControlInput} from '../../components';
 import {Account, RegisterScreenProps} from '../../types';
+import {COLORS} from '../../constants';
+import {AVATAR_BACKGROUND_COLOR} from '../../constants/message-status';
 
 type Info = Account & {
   displayName: string;
@@ -70,12 +72,18 @@ const RegisterScreen = ({navigation}: RegisterScreenProps) => {
       reset();
       Alert.alert('Tên đăng nhập đã tồn tại');
     } else {
+      const color =
+        AVATAR_BACKGROUND_COLOR[
+          Math.floor(Math.random() * AVATAR_BACKGROUND_COLOR.length)
+        ];
+
       firestore()
         .collection('users')
         .add({
           displayName,
           username,
           password,
+          color,
         })
         .then(() => {
           reset();
@@ -164,7 +172,7 @@ const styles = StyleSheet.create({
   button: {
     width: '80%',
     height: 40,
-    backgroundColor: '#FFB72B',
+    backgroundColor: COLORS.orange,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 5,

@@ -15,6 +15,7 @@ import {ActionType} from '../../store/action';
 import {ControlInput} from '../../components';
 import {loginSchema} from '../../schema';
 import {Account, LoginScreenProps} from '../../types';
+import {COLORS} from '../../constants';
 
 enum defaultValues {
   username = '',
@@ -67,7 +68,7 @@ const LoginScreen = ({navigation}: LoginScreenProps) => {
               payload,
             });
             reset(defaultValues);
-            navigation.navigate('GiftedChat' as never);
+            navigation.navigate('GiftedChatList');
           } else {
             Alert.alert('Tên đăng nhập hoặc mật khẩu không chính xác');
           }
@@ -137,7 +138,7 @@ const styles = StyleSheet.create({
   button: {
     width: '80%',
     height: 40,
-    backgroundColor: '#FFB72B',
+    backgroundColor: COLORS.orange,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 5,
