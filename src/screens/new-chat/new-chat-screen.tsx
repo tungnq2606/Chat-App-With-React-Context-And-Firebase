@@ -22,9 +22,11 @@ type UserItemProps = {
   color: string;
 };
 
+let usersTemp: UserItemProps[] = [];
+
 const NewChatScreen = () => {
-  const userRef = firestore().collection('users');
   const [users, setUsers] = useState<Array<UserItemProps>>([]);
+  const [search, setSearch] = useState('');
   const {state} = useUser();
 
   const renderItem = useCallback(({item}: {item: UserItemProps}) => {
@@ -61,23 +63,45 @@ const NewChatScreen = () => {
           listUsers.push(user);
         }
       });
+      usersTemp = listUsers;
       setUsers(listUsers);
     };
     fetchData();
   }, [state.user.id]);
+
+  const onSearchTextChange = (text: string) => {
+    setSearch(text);
+    searchUser(text);
+  };
+
+  const searchUser = (text: string) => {
+    if (text) {
+      const res = users.filter(user =>
+        user.displayName.toLowerCase().includes(text.toLowerCase()),
+      );
+      setUsers(res);
+    } else {
+      setUsers(usersTemp);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <NavigationBar title="Tin nhắn mới">
         <View style={styles.searchContainer}>
           <FastImage source={ICONS.search} style={styles.searchIcon} />
-          <TextInput placeholder="Tìm kiếm" style={styles.search} />
+          <TextInput
+            placeholder="Tìm kiếm"
+            style={styles.search}
+            value={search}
+            onChangeText={onSearchTextChange}
+          />
         </View>
       </NavigationBar>
       <View style={styles.listContainer}>
-        <Text style={styles.title}>GỢI Ý</Text>
+        {search.trim().length === 0 && <Text style={styles.title}>GỢI Ý</Text>}
         <FlatList
-          data={users}
+          data={users.slice(0, 10)}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
           contentContainerStyle={styles.flatListContentContainer}
