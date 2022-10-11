@@ -5,11 +5,14 @@ import {
   StyleSheet,
   TouchableOpacity,
   Platform,
+  Alert,
 } from 'react-native';
 import React from 'react';
 import FastImage from 'react-native-fast-image';
 import ICONS from '../assets/icons';
 import {useNavigation} from '@react-navigation/native';
+import {useUser} from '../hooks/use-user';
+import {ActionType} from '../store/action';
 
 type Props = {
   title: string | undefined;
@@ -17,17 +20,41 @@ type Props = {
   containerStyle?: ViewStyle;
   children?: JSX.Element;
   hiddenBackButton?: boolean;
+  hiddenLogoutButton?: boolean;
 };
 
 const NavigationBar = (props: Props) => {
   const navigation = useNavigation();
-  const {title, onPress, containerStyle, children, hiddenBackButton} = props;
+  const {
+    title,
+    onPress,
+    containerStyle,
+    children,
+    hiddenBackButton,
+    hiddenLogoutButton,
+  } = props;
+  const {dispatch} = useUser();
   const _onPress = () => {
     if (onPress) {
       onPress();
     } else {
       navigation.goBack();
     }
+  };
+  const onLogout = () => {
+    Alert.alert('Đăng xuất', 'Bạn có chắc muốn đăng xuất ?', [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'OK',
+        onPress: () => {
+          dispatch({type: ActionType.LOGOUT});
+          navigation.goBack();
+        },
+      },
+    ]);
   };
   return (
     <View style={styles.container}>
@@ -42,6 +69,15 @@ const NavigationBar = (props: Props) => {
             <FastImage source={ICONS.arrowLeft} style={styles.icon} />
           </TouchableOpacity>
         )}
+        {!hiddenLogoutButton && (
+          <TouchableOpacity
+            onPress={onLogout}
+            activeOpacity={0.9}
+            style={styles.logoutButton}>
+            <FastImage source={ICONS.logout} style={styles.icon} />
+          </TouchableOpacity>
+        )}
+
         <Text style={styles.title}>{title}</Text>
       </View>
       {children}
@@ -83,6 +119,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  logoutButton: {
+    position: 'absolute',
+    right: 16,
   },
 });
 
