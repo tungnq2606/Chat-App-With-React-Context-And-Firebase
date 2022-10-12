@@ -1,12 +1,20 @@
 import React, {useState, useCallback, useEffect} from 'react';
 import {SafeAreaView, StyleSheet, Text, View} from 'react-native';
-import {GiftedChat, IMessage, Send, SendProps} from 'react-native-gifted-chat';
+import {
+  Day,
+  DayProps,
+  GiftedChat,
+  IMessage,
+  Send,
+  SendProps,
+} from 'react-native-gifted-chat';
 import firestore from '@react-native-firebase/firestore';
 
 import {NavigationBar} from '../../components';
 import {GiftedChatScreenProps} from '../../types';
 import {useUser} from '../../hooks/use-user';
 import {getAbbreviations} from '../../utils';
+import {ActionType} from '../../store/action';
 
 type Message = {
   _id: string;
@@ -21,9 +29,10 @@ const GiftedChatScreen = ({route}: GiftedChatScreenProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const {chatId, partnerName, color} = route.params;
 
-  const {state} = useUser();
+  const {state, dispatch} = useUser();
 
   useEffect(() => {
+    // dispatch({type: ActionType.SHOW_LOADING});
     const subscriber = firestore()
       .collection('chatMessages')
       .doc(chatId)
@@ -44,14 +53,15 @@ const GiftedChatScreen = ({route}: GiftedChatScreenProps) => {
         setMessages(
           listMsg.sort(
             (a, b) =>
-              new Date(a.createdAt).valueOf() - new Date(b.createdAt).valueOf(),
+              new Date(b.createdAt).valueOf() - new Date(a.createdAt).valueOf(),
           ),
         );
+        // dispatch({type: ActionType.HIDE_LOADING});
       });
 
     // Stop listening for updates when no longer required
     return () => subscriber();
-  }, [chatId]);
+  }, [chatId, dispatch]);
 
   const renderSend = (props: SendProps<IMessage>) => (
     <Send {...props}>
@@ -72,11 +82,25 @@ const GiftedChatScreen = ({route}: GiftedChatScreenProps) => {
       setMessages(previousMessages =>
         GiftedChat.append(previousMessages, mess),
       );
-      await firestore()
+      firestore()
         .collection('chatMessages')
         .doc(chatId)
         .collection('messages')
-        .add(params);
+        .add(params)
+        .then(async () => {
+          const recentParams = {
+            content: mess[0].text,
+            sentDate: firestore.Timestamp.fromDate(mess[0].createdAt),
+            sentBy: state.user.id,
+          };
+          await firestore()
+            .collection('chat')
+            .doc(chatId)
+            .update({recentMessage: recentParams, isRead: false});
+        })
+        .catch(error => {
+          console.log(error);
+        });
     },
     [chatId, state.user.id],
   );
@@ -95,6 +119,10 @@ const GiftedChatScreen = ({route}: GiftedChatScreenProps) => {
     </View>
   );
 
+  const renderDay = (props: DayProps) => (
+    <Day {...props} dateFormat="DD/MM/YYYY" />
+  );
+
   return (
     <View style={styles.container}>
       <SafeAreaView>
@@ -111,9 +139,14 @@ const GiftedChatScreen = ({route}: GiftedChatScreenProps) => {
         textInputProps={{
           style: styles.textInputStyle,
         }}
+        listViewProps={{
+          bounces: false,
+          showsVerticalScrollIndicator: false,
+        }}
         renderSend={renderSend}
         renderChatEmpty={renderEmptyChat}
         renderAvatar={renderAvatar}
+        renderDay={renderDay}
         messagesContainerStyle={[
           messages.length === 0 && {transform: [{scaleY: -1}]},
         ]}

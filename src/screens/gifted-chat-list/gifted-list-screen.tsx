@@ -35,33 +35,39 @@ const GiftedChatListScreen = ({navigation}: GiftedChatListScreenProps) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const listMsg: MessageProps[] = [];
       const reference = firestore().collection('users').doc(state.user.id);
-      const res = await firestore()
+      firestore()
         .collection('chat')
         .where('members', 'array-contains', reference)
-        .limit(10)
-        .get();
+        .onSnapshot(documentSnapshot => {
+          const listMsg: MessageProps[] = [];
 
-      res.docs.forEach(async doc => {
-        if (doc.data()?.members?.length > 0) {
-          const member = doc
-            .data()
-            ?.members.find((e: {id: string}) => e.id !== state.user.id);
-          const partner = await member.get();
-          const msg: MessageProps = {
-            id: doc.id,
-            displayName: partner.data()?.displayName,
-            message: doc.data()?.recentMessage?.content,
-            isRead: doc.data()?.isRead,
-            sentDate: doc.data()?.recentMessage?.sentDate?.toDate(),
-            sentBy: doc.data()?.recentMessage?.sentBy,
-            color: partner.data()?.color,
-          };
-          listMsg.push(msg);
-        }
-        setMessages(listMsg);
-      });
+          documentSnapshot.docs.forEach(async doc => {
+            if (doc.data()?.members?.length > 0) {
+              const member = doc
+                .data()
+                ?.members.find((e: {id: string}) => e.id !== state.user.id);
+              const partner = await member.get();
+              const msg: MessageProps = {
+                id: doc.id,
+                displayName: partner.data()?.displayName,
+                message: doc.data()?.recentMessage?.content,
+                isRead: doc.data()?.isRead,
+                sentDate: doc.data()?.recentMessage?.sentDate?.toDate(),
+                sentBy: doc.data()?.recentMessage?.sentBy,
+                color: partner.data()?.color,
+              };
+              listMsg.push(msg);
+            }
+            setMessages(
+              listMsg.sort(
+                (a, b) =>
+                  new Date(b.sentDate).valueOf() -
+                  new Date(a.sentDate).valueOf(),
+              ),
+            );
+          });
+        });
     };
 
     fetchData();
