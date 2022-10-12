@@ -1,21 +1,34 @@
-import {View, Text, StyleSheet, TextStyle, ViewStyle} from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextStyle,
+  ViewStyle,
+  TouchableOpacity,
+} from 'react-native';
 import React from 'react';
 import {getAbbreviations, getDisplayTime} from '../../../utils';
 import {useUser} from '../../../hooks/use-user';
+import {useNavigation} from '@react-navigation/native';
+import {GiftedChatScreenProps} from '../../../types';
 
 export type MessageProps = {
   id: string;
   displayName: string;
   message: string;
   isRead: boolean;
-  sentDate: string;
+  sentDate: Date;
   sentBy: string;
   color?: string;
 };
 
+type MessageNavigationProp = GiftedChatScreenProps['navigation'];
+
 const MessageRenderItem = (props: MessageProps) => {
   const {state} = useUser();
-  const {displayName, message, isRead, sentDate, color, sentBy} = props;
+  const {id, displayName, message, isRead, sentDate, color, sentBy} = props;
+
+  const navigation = useNavigation<MessageNavigationProp>();
 
   const isMessageFromMe = sentBy === state.user.id;
 
@@ -28,8 +41,19 @@ const MessageRenderItem = (props: MessageProps) => {
     fontWeight: isMessageFromMe && !isRead ? 'bold' : 'normal',
   };
 
+  const goToChat = () => {
+    navigation.navigate('GiftedChat', {
+      partnerName: displayName,
+      chatId: id,
+      color,
+    });
+  };
+
   return (
-    <View style={styles.container}>
+    <TouchableOpacity
+      style={styles.container}
+      activeOpacity={0.8}
+      onPress={goToChat}>
       <View style={[styles.avatar, backgroundColorStyle]}>
         <Text style={styles.avatarLabel}>{abbreviationName}</Text>
       </View>
@@ -40,11 +64,11 @@ const MessageRenderItem = (props: MessageProps) => {
         <View style={styles.messageContainer}>
           <Text style={[styles.message, styleForUnreadMessage]}>{message}</Text>
           <Text style={[styles.sentDate, styleForUnreadMessage]}>
-            {getDisplayTime('2020-10-11T09:00:00.000Z')}
+            {getDisplayTime(sentDate)}
           </Text>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 

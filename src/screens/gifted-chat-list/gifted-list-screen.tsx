@@ -54,7 +54,7 @@ const GiftedChatListScreen = ({navigation}: GiftedChatListScreenProps) => {
             displayName: partner.data()?.displayName,
             message: doc.data()?.recentMessage?.content,
             isRead: doc.data()?.isRead,
-            sentDate: doc.data()?.recentMessage?.sentDate,
+            sentDate: doc.data()?.recentMessage?.sentDate?.toDate(),
             sentBy: doc.data()?.recentMessage?.sentBy,
             color: partner.data()?.color,
           };
