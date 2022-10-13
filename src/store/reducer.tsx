@@ -1,8 +1,9 @@
-import {User} from '../types';
+import {Message, User} from '../types';
 import {Action, ActionType} from './action';
 
 export type State = {
   user: User;
+  messages: Array<Message>;
   loading: boolean;
 };
 
@@ -20,6 +21,7 @@ export const reducer = (state: State, action: Action): State => {
           id: '',
           displayName: '',
         },
+        messages: [],
       };
     case ActionType.SHOW_LOADING:
       return {
@@ -30,6 +32,21 @@ export const reducer = (state: State, action: Action): State => {
       return {
         ...state,
         loading: false,
+      };
+    case ActionType.SET_MESSAGES:
+      return {
+        ...state,
+        messages: action.payload,
+      };
+    case ActionType.ADD_MESSAGE:
+      return {
+        ...state,
+        messages: [...state.messages, action.payload],
+      };
+    case ActionType.CLEAR_MESSAGES:
+      return {
+        ...state,
+        messages: [],
       };
 
     default:

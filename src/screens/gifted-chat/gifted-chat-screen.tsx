@@ -1,4 +1,4 @@
-import React, {useState, useCallback, useEffect} from 'react';
+import React, {useCallback, useEffect} from 'react';
 import {SafeAreaView, StyleSheet, Text, View} from 'react-native';
 import {
   Day,
@@ -11,28 +11,18 @@ import {
 import firestore from '@react-native-firebase/firestore';
 
 import {NavigationBar} from '../../components';
-import {GiftedChatScreenProps} from '../../types';
+import {GiftedChatScreenProps, Message} from '../../types';
 import {useUser} from '../../hooks/use-user';
 import {getAbbreviations} from '../../utils';
 import {ActionType} from '../../store/action';
 
-type Message = {
-  _id: string;
-  text: string;
-  createdAt: Date;
-  user: {
-    _id: string;
-  };
-};
-
 const GiftedChatScreen = ({route}: GiftedChatScreenProps) => {
-  const [messages, setMessages] = useState<Message[]>([]);
   const {chatId, partnerName, color} = route.params;
 
   const {state, dispatch} = useUser();
 
   useEffect(() => {
-    // dispatch({type: ActionType.SHOW_LOADING});
+    dispatch({type: ActionType.CLEAR_MESSAGES});
     const subscriber = firestore()
       .collection('chatMessages')
       .doc(chatId)
@@ -50,13 +40,13 @@ const GiftedChatScreen = ({route}: GiftedChatScreenProps) => {
           };
           listMsg.push(msg);
         });
-        setMessages(
-          listMsg.sort(
+        dispatch({
+          type: ActionType.SET_MESSAGES,
+          payload: listMsg.sort(
             (a, b) =>
               new Date(b.createdAt).valueOf() - new Date(a.createdAt).valueOf(),
           ),
-        );
-        // dispatch({type: ActionType.HIDE_LOADING});
+        });
       });
 
     // Stop listening for updates when no longer required
@@ -79,9 +69,17 @@ const GiftedChatScreen = ({route}: GiftedChatScreenProps) => {
         sentBy: state.user.id,
         isRead: false,
       };
-      setMessages(previousMessages =>
-        GiftedChat.append(previousMessages, mess),
-      );
+      dispatch({
+        type: ActionType.ADD_MESSAGE,
+        payload: {
+          _id: mess[0]._id,
+          text: mess[0].text,
+          createdAt: mess[0].createdAt,
+          user: {
+            _id: mess[0].user._id,
+          },
+        },
+      });
       firestore()
         .collection('chatMessages')
         .doc(chatId)
@@ -102,10 +100,14 @@ const GiftedChatScreen = ({route}: GiftedChatScreenProps) => {
           console.log(error);
         });
     },
-    [chatId, state.user.id],
+    [chatId, state.user.id, dispatch],
   );
 
-  const renderEmptyChat = () => <Text>Hello</Text>;
+  const renderEmptyChat = () => (
+    <View>
+      <Text style={styles.emptyChatText}>Chưa có tin nhắn nào</Text>
+    </View>
+  );
 
   const renderAvatar = () => (
     <View
@@ -130,7 +132,7 @@ const GiftedChatScreen = ({route}: GiftedChatScreenProps) => {
       </SafeAreaView>
       <GiftedChat
         placeholder="Nhập tin nhắn..."
-        messages={messages}
+        messages={state.messages}
         onSend={onSend}
         user={{
           _id: state.user.id,
@@ -148,7 +150,7 @@ const GiftedChatScreen = ({route}: GiftedChatScreenProps) => {
         renderAvatar={renderAvatar}
         renderDay={renderDay}
         messagesContainerStyle={[
-          messages.length === 0 && {transform: [{scaleY: -1}]},
+          state.messages.length === 0 && {transform: [{scaleY: -1}]},
         ]}
         renderComposer={() => null}
         wrapInSafeArea={false}
@@ -188,6 +190,12 @@ const styles = StyleSheet.create({
   avatarText: {
     color: '#fff',
     fontSize: 16,
+  },
+  emptyChatText: {
+    width: '100%',
+    textAlign: 'center',
+    marginTop: 40,
+    color: '#999',
   },
 });
 

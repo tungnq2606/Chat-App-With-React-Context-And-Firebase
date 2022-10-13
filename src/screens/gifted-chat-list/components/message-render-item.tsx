@@ -7,9 +7,11 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import React from 'react';
+import {useNavigation} from '@react-navigation/native';
+import firestore from '@react-native-firebase/firestore';
+
 import {getAbbreviations, getDisplayTime} from '../../../utils';
 import {useUser} from '../../../hooks/use-user';
-import {useNavigation} from '@react-navigation/native';
 import {GiftedChatScreenProps} from '../../../types';
 
 export type MessageProps = {
@@ -38,15 +40,16 @@ const MessageRenderItem = (props: MessageProps) => {
   };
 
   const styleForUnreadMessage: TextStyle = {
-    fontWeight: isMessageFromMe && !isRead ? 'bold' : 'normal',
+    fontWeight: !isMessageFromMe && !isRead ? 'bold' : 'normal',
   };
 
-  const goToChat = () => {
+  const goToChat = async () => {
     navigation.navigate('GiftedChat', {
       partnerName: displayName,
       chatId: id,
       color,
     });
+    await firestore().collection('chat').doc(id).update({isRead: true});
   };
 
   return (
@@ -62,7 +65,9 @@ const MessageRenderItem = (props: MessageProps) => {
           {displayName}
         </Text>
         <View style={styles.messageContainer}>
-          <Text style={[styles.message, styleForUnreadMessage]}>{message}</Text>
+          <Text style={[styles.message, styleForUnreadMessage]}>
+            {isMessageFromMe ? `Bạn: ${message}` : message}
+          </Text>
           <Text style={[styles.sentDate, styleForUnreadMessage]}>
             {getDisplayTime(sentDate)}
           </Text>

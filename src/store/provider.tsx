@@ -20,6 +20,7 @@ const initialState: State = {
     id: '',
     displayName: '',
   },
+  messages: [],
   loading: false,
 };
 

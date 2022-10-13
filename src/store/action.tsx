@@ -1,10 +1,13 @@
-import {User} from '../types';
+import {Message, User} from '../types';
 
 export enum ActionType {
   LOGIN,
   LOGOUT,
   SHOW_LOADING,
   HIDE_LOADING,
+  SET_MESSAGES,
+  ADD_MESSAGE,
+  CLEAR_MESSAGES,
 }
 
 export interface Login {
@@ -24,4 +27,25 @@ export interface HideLoading {
   type: ActionType.HIDE_LOADING;
 }
 
-export type Action = Login | Logout | ShowLoading | HideLoading;
+export interface SetMessages {
+  type: ActionType.SET_MESSAGES;
+  payload: Array<Message>;
+}
+
+export interface AddMessage {
+  type: ActionType.ADD_MESSAGE;
+  payload: Message;
+}
+
+export interface ClearMessages {
+  type: ActionType.CLEAR_MESSAGES;
+}
+
+export type Action =
+  | Login
+  | Logout
+  | ShowLoading
+  | HideLoading
+  | SetMessages
+  | AddMessage
+  | ClearMessages;
