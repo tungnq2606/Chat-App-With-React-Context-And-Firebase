@@ -48,8 +48,11 @@ const MessageRenderItem = (props: MessageProps) => {
       partnerName: displayName,
       chatId: id,
       color,
+      partnerId: sentBy,
     });
-    await firestore().collection('chat').doc(id).update({isRead: true});
+    if (!isMessageFromMe && !isRead) {
+      await firestore().collection('chat').doc(id).update({isRead: true});
+    }
   };
 
   return (

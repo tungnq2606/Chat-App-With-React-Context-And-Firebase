@@ -1,5 +1,11 @@
 import React, {useCallback, useEffect, useRef} from 'react';
-import {SafeAreaView, StyleSheet, Text, View} from 'react-native';
+import {
+  ActivityIndicator,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import {
   Day,
   DayProps,
@@ -180,6 +186,11 @@ const GiftedChatScreen = ({route, navigation}: GiftedChatScreenProps) => {
         />
       </SafeAreaView>
       <GiftedChat
+        renderLoading={() => (
+          <View>
+            <ActivityIndicator size="small" color="#5c5b5b" />
+          </View>
+        )}
         placeholder="Nhập tin nhắn..."
         messages={state.messages}
         onSend={onSend}
@@ -187,13 +198,15 @@ const GiftedChatScreen = ({route, navigation}: GiftedChatScreenProps) => {
           _id: state.user.id,
         }}
         minInputToolbarHeight={80}
+        minComposerHeight={80}
         textInputProps={{
           style: styles.textInputStyle,
         }}
         listViewProps={{
-          bounces: false,
           showsVerticalScrollIndicator: false,
+          initialNumToRender: 100,
         }}
+        scrollToBottom
         renderSend={renderSend}
         renderChatEmpty={renderEmptyChat}
         renderAvatar={renderAvatar}

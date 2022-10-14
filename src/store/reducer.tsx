@@ -42,7 +42,7 @@ export const reducer = (state: State, action: Action): State => {
     case ActionType.ADD_MESSAGE:
       return {
         ...state,
-        messages: [...state.messages, action.payload],
+        messages: [action.payload, ...state.messages],
       };
     case ActionType.CLEAR_MESSAGES:
       return {
