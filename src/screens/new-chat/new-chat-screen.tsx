@@ -5,42 +5,55 @@ import {
   TextInput,
   StyleSheet,
   FlatList,
+  TouchableOpacity,
 } from 'react-native';
 import React, {useCallback, useEffect, useState} from 'react';
 import FastImage from 'react-native-fast-image';
 import firestore from '@react-native-firebase/firestore';
+import {isEqual} from 'lodash';
 
 import {NavigationBar} from '../../components';
 import ICONS from '../../assets/icons';
 import {COLORS} from '../../constants';
 import {getAbbreviations} from '../../utils';
 import {useUser} from '../../hooks/use-user';
-
-type UserItemProps = {
-  id: string;
-  displayName: string;
-  color: string;
-};
+import {NewChatScreenProps, UserItemProps} from '../../types';
+import {ActionType} from '../../store/action';
 
 let usersTemp: UserItemProps[] = [];
 
-const NewChatScreen = () => {
-  const [users, setUsers] = useState<Array<UserItemProps>>([]);
+const NewChatScreen = ({navigation}: NewChatScreenProps) => {
   const [search, setSearch] = useState('');
-  const {state} = useUser();
+  const {state, dispatch} = useUser();
+  const [users, setUsers] = useState<Array<UserItemProps>>(state.users);
 
-  const renderItem = useCallback(({item}: {item: UserItemProps}) => {
-    const {displayName, color} = item;
-    const abbreviationName = getAbbreviations(displayName);
-    return (
-      <View style={styles.item}>
-        <View style={[styles.avatar, {backgroundColor: color}]}>
-          <Text style={styles.avatarText}>{abbreviationName}</Text>
-        </View>
-        <Text style={styles.displayName}>{displayName}</Text>
-      </View>
-    );
-  }, []);
+  const renderItem = useCallback(
+    ({item}: {item: UserItemProps}) => {
+      const {displayName, color} = item;
+      const abbreviationName = getAbbreviations(displayName);
+
+      const onPress = () => {
+        navigation.navigate('GiftedChat', {
+          partnerName: displayName,
+          partnerId: item.partnerId,
+          chatId: item.chatId,
+          color,
+        });
+      };
+      return (
+        <TouchableOpacity
+          style={styles.item}
+          onPress={onPress}
+          activeOpacity={0.8}>
+          <View style={[styles.avatar, {backgroundColor: color}]}>
+            <Text style={styles.avatarText}>{abbreviationName}</Text>
+          </View>
+          <Text style={styles.displayName}>{displayName}</Text>
+        </TouchableOpacity>
+      );
+    },
+    [navigation],
+  );
 
   const renderSeparator = useCallback(
     () => <View style={styles.separator} />,
@@ -51,22 +64,43 @@ const NewChatScreen = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const res = await firestore().collection('users').get();
+      const resUsers = await firestore().collection('users').get();
+      dispatch({type: ActionType.CLEAR_MESSAGES});
+
       const listUsers: UserItemProps[] = [];
-      res.docs.forEach(doc => {
+      for (const doc of resUsers.docs) {
         if (doc.id !== state.user.id) {
           const user: UserItemProps = {
             id: doc.id,
             displayName: doc.data()?.displayName,
             color: doc.data()?.color,
+            partnerId: '',
           };
+          const usersMap: {
+            [key: string]: null;
+          } = {};
+          usersMap[state.user.id] = null;
+          usersMap[doc.id] = null;
+          const resChat = await firestore().collection('userChats').get();
+          const partnerId = Object.keys(usersMap).find(
+            id => id !== state.user.id,
+          );
+          user.partnerId = partnerId || '';
+          for (const docChat of resChat.docs) {
+            if (isEqual(docChat.data()?.users, usersMap)) {
+              user.chatId = docChat.data().chatId;
+              break;
+            }
+          }
           listUsers.push(user);
         }
-      });
+      }
+      dispatch({type: ActionType.SET_USERS, payload: listUsers});
       usersTemp = listUsers;
       setUsers(listUsers);
     };
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.user.id]);
 
   const onSearchTextChange = (text: string) => {
@@ -76,7 +110,7 @@ const NewChatScreen = () => {
 
   const searchUser = (text: string) => {
     if (text) {
-      const res = users.filter(user =>
+      const res = usersTemp.filter(user =>
         user.displayName.toLowerCase().includes(text.toLowerCase()),
       );
       setUsers(res);
@@ -87,7 +121,7 @@ const NewChatScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <NavigationBar title="Tin nhắn mới">
+      <NavigationBar title="Tin nhắn mới" hiddenLogoutButton>
         <View style={styles.searchContainer}>
           <FastImage source={ICONS.search} style={styles.searchIcon} />
           <TextInput
@@ -101,10 +135,12 @@ const NewChatScreen = () => {
       <View style={styles.listContainer}>
         {search.trim().length === 0 && <Text style={styles.title}>GỢI Ý</Text>}
         <FlatList
-          data={users.slice(0, 10)}
+          data={users?.slice(0, 10)}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
-          contentContainerStyle={styles.flatListContentContainer}
+          contentContainerStyle={
+            users?.length === 0 && styles.flatListContentContainer
+          }
           ItemSeparatorComponent={renderSeparator}
         />
       </View>

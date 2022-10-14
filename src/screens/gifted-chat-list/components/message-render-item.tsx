@@ -12,7 +12,7 @@ import firestore from '@react-native-firebase/firestore';
 
 import {getAbbreviations, getDisplayTime} from '../../../utils';
 import {useUser} from '../../../hooks/use-user';
-import {GiftedChatScreenProps} from '../../../types';
+import {GiftedChatListScreenProps} from '../../../types';
 
 export type MessageProps = {
   id: string;
@@ -24,7 +24,7 @@ export type MessageProps = {
   color?: string;
 };
 
-type MessageNavigationProp = GiftedChatScreenProps['navigation'];
+type MessageNavigationProp = GiftedChatListScreenProps['navigation'];
 
 const MessageRenderItem = (props: MessageProps) => {
   const {state} = useUser();

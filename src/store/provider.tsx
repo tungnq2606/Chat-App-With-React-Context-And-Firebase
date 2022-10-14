@@ -21,6 +21,7 @@ const initialState: State = {
     displayName: '',
   },
   messages: [],
+  users: [],
   loading: false,
 };
 

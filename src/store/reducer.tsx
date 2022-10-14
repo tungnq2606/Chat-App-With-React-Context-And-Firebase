@@ -1,9 +1,10 @@
-import {Message, User} from '../types';
+import {Message, User, UserItemProps} from '../types';
 import {Action, ActionType} from './action';
 
 export type State = {
   user: User;
   messages: Array<Message>;
+  users: Array<UserItemProps>;
   loading: boolean;
 };
 
@@ -47,6 +48,17 @@ export const reducer = (state: State, action: Action): State => {
       return {
         ...state,
         messages: [],
+      };
+
+    case ActionType.SET_USERS:
+      return {
+        ...state,
+        users: action.payload,
+      };
+    case ActionType.CLEAR_USERS:
+      return {
+        ...state,
+        users: [],
       };
 
     default:

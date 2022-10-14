@@ -14,7 +14,12 @@ import {AppLoading} from '../components';
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
-  GiftedChat: {chatId: string; partnerName: string; color: string | undefined};
+  GiftedChat: {
+    chatId?: string;
+    partnerName: string;
+    color: string | undefined;
+    partnerId: string;
+  };
   GiftedChatList: undefined;
   NewChat: undefined;
 };

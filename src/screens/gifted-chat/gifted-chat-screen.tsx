@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect} from 'react';
+import React, {useCallback, useEffect, useRef} from 'react';
 import {SafeAreaView, StyleSheet, Text, View} from 'react-native';
 import {
   Day,
@@ -16,16 +16,29 @@ import {useUser} from '../../hooks/use-user';
 import {getAbbreviations} from '../../utils';
 import {ActionType} from '../../store/action';
 
-const GiftedChatScreen = ({route}: GiftedChatScreenProps) => {
+const GiftedChatScreen = ({route, navigation}: GiftedChatScreenProps) => {
   const {chatId, partnerName, color} = route.params;
+  const routes = navigation.getState()?.routes;
+  const previosRoute = routes?.[routes.length - 2]?.name;
 
+  const onBackPress = () => {
+    if (previosRoute === 'GiftedChatList') {
+      navigation.goBack();
+    } else {
+      navigation.reset({
+        index: 1,
+        routes: [{name: 'Login'}, {name: 'GiftedChatList'}],
+      });
+    }
+  };
+  let newChatId = useRef(chatId);
   const {state, dispatch} = useUser();
 
   useEffect(() => {
     dispatch({type: ActionType.CLEAR_MESSAGES});
     const subscriber = firestore()
       .collection('chatMessages')
-      .doc(chatId)
+      .doc(newChatId.current)
       .collection('messages')
       .onSnapshot(documentSnapshot => {
         const listMsg: Message[] = [];
@@ -51,7 +64,7 @@ const GiftedChatScreen = ({route}: GiftedChatScreenProps) => {
 
     // Stop listening for updates when no longer required
     return () => subscriber();
-  }, [chatId, dispatch]);
+  }, [newChatId, dispatch]);
 
   const renderSend = (props: SendProps<IMessage>) => (
     <Send {...props}>
@@ -80,9 +93,40 @@ const GiftedChatScreen = ({route}: GiftedChatScreenProps) => {
           },
         },
       });
+
+      if (!newChatId.current) {
+        const id = firestore().collection('chatMessages').doc().id;
+        newChatId.current = id;
+        await firestore()
+          .collection('chat')
+          .doc(id)
+          .set({
+            createAt: firestore.Timestamp.fromDate(new Date()),
+            isRead: false,
+            members: [
+              firestore().collection('users').doc(route.params.partnerId),
+              firestore().collection('users').doc(state.user.id),
+            ],
+            recentMessage: {
+              content: mess[0].text,
+              sentDate: firestore.Timestamp.fromDate(mess[0].createdAt),
+              sentBy: state.user.id,
+            },
+          });
+        await firestore()
+          .collection('userChats')
+          .add({
+            chatId: id,
+            users: {
+              [state.user.id]: null,
+              [route.params.partnerId]: null,
+            },
+          });
+      }
+
       firestore()
         .collection('chatMessages')
-        .doc(chatId)
+        .doc(newChatId.current)
         .collection('messages')
         .add(params)
         .then(async () => {
@@ -93,14 +137,15 @@ const GiftedChatScreen = ({route}: GiftedChatScreenProps) => {
           };
           await firestore()
             .collection('chat')
-            .doc(chatId)
+            .doc(newChatId.current)
             .update({recentMessage: recentParams, isRead: false});
         })
         .catch(error => {
           console.log(error);
         });
     },
-    [chatId, state.user.id, dispatch],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [newChatId, state.user.id],
   );
 
   const renderEmptyChat = () => (
@@ -128,7 +173,11 @@ const GiftedChatScreen = ({route}: GiftedChatScreenProps) => {
   return (
     <View style={styles.container}>
       <SafeAreaView>
-        <NavigationBar title={partnerName} hiddenLogoutButton />
+        <NavigationBar
+          title={partnerName}
+          hiddenLogoutButton
+          onPress={onBackPress}
+        />
       </SafeAreaView>
       <GiftedChat
         placeholder="Nhập tin nhắn..."

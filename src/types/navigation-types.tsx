@@ -20,3 +20,8 @@ export type GiftedChatListScreenProps = NativeStackScreenProps<
   RootStackParamList,
   'GiftedChatList'
 >;
+
+export type NewChatScreenProps = NativeStackScreenProps<
+  RootStackParamList,
+  'NewChat'
+>;
