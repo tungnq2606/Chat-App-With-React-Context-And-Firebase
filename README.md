@@ -1,4 +1,4 @@
-React Native Chat App Demo 
+<h1>React Native Chat App Demo </h1>
 
 Using React Context + Reducer for global store data and Firebase for Database
 
