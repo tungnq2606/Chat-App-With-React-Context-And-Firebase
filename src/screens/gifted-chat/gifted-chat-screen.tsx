@@ -1,6 +1,7 @@
 import React, {useCallback, useEffect, useRef} from 'react';
 import {
   ActivityIndicator,
+  BackHandler,
   Platform,
   SafeAreaView,
   StyleSheet,
@@ -39,9 +40,11 @@ const GiftedChatScreen = ({route, navigation}: GiftedChatScreenProps) => {
         routes: [{name: 'Login'}, {name: 'GiftedChatList'}],
       });
     }
+    return true;
   };
 
   useEffect(() => {
+    BackHandler.addEventListener('hardwareBackPress', onBackPress);
     dispatch({type: ActionType.CLEAR_MESSAGES});
     const subscriber = firestore()
       .collection('chatMessages')
@@ -70,7 +73,11 @@ const GiftedChatScreen = ({route, navigation}: GiftedChatScreenProps) => {
       });
 
     // Stop listening for updates when no longer required
-    return () => subscriber();
+    return () => {
+      subscriber();
+      BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [newChatId, dispatch]);
 
   const renderSend = (props: SendProps<IMessage>) => (
