@@ -121,12 +121,13 @@ const styles = StyleSheet.create({
   searchContainer: {
     backgroundColor: COLORS.backgroundMainHome,
     marginHorizontal: 16,
-    paddingVertical: 10,
     borderWidth: 1,
     borderColor: COLORS.borderColor,
     borderRadius: 40,
     flexDirection: 'row',
     paddingHorizontal: 12,
+    alignItems: 'center',
+    height: 40,
   },
   searchIcon: {
     width: 15,
