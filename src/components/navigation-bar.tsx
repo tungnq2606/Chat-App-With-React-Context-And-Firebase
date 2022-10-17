@@ -4,15 +4,12 @@ import {
   ViewStyle,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   StatusBar,
 } from 'react-native';
 import React from 'react';
 import FastImage from 'react-native-fast-image';
 import ICONS from '../assets/icons';
 import {useNavigation} from '@react-navigation/native';
-import {useUser} from '../hooks/use-user';
-import {ActionType} from '../store/action';
 
 type Props = {
   title: string | undefined;
@@ -21,6 +18,7 @@ type Props = {
   children?: JSX.Element;
   hiddenBackButton?: boolean;
   hiddenLogoutButton?: boolean;
+  onPressLogout?: () => boolean;
 };
 
 const NavigationBar = (props: Props) => {
@@ -32,8 +30,8 @@ const NavigationBar = (props: Props) => {
     children,
     hiddenBackButton,
     hiddenLogoutButton,
+    onPressLogout,
   } = props;
-  const {dispatch} = useUser();
   const _onPress = () => {
     if (onPress) {
       onPress();
@@ -41,21 +39,7 @@ const NavigationBar = (props: Props) => {
       navigation.goBack();
     }
   };
-  const onLogout = () => {
-    Alert.alert('Đăng xuất', 'Bạn có chắc muốn đăng xuất ?', [
-      {
-        text: 'Cancel',
-        style: 'cancel',
-      },
-      {
-        text: 'OK',
-        onPress: () => {
-          dispatch({type: ActionType.LOGOUT});
-          navigation.goBack();
-        },
-      },
-    ]);
-  };
+
   return (
     <View style={styles.container}>
       <View style={[styles.navigationBar, containerStyle]}>
@@ -72,7 +56,7 @@ const NavigationBar = (props: Props) => {
         )}
         {!hiddenLogoutButton && (
           <TouchableOpacity
-            onPress={onLogout}
+            onPress={onPressLogout}
             activeOpacity={0.9}
             style={styles.logoutButton}>
             <FastImage source={ICONS.logout} style={styles.icon} />

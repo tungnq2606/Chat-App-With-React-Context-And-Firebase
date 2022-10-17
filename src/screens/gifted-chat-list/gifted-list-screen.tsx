@@ -6,8 +6,10 @@ import {
   TextInput,
   View,
   TouchableOpacity,
+  Alert,
+  BackHandler,
 } from 'react-native';
-import React, {useEffect} from 'react';
+import React, {useCallback, useEffect} from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import FastImage from 'react-native-fast-image';
 import firestore from '@react-native-firebase/firestore';
@@ -20,6 +22,8 @@ import {COLORS} from '../../constants';
 import ICONS from '../../assets/icons';
 import {useUser} from '../../hooks/use-user';
 import {GiftedChatListScreenProps} from '../../types';
+import {ActionType} from '../../store/action';
+import {useFocusEffect} from '@react-navigation/native';
 
 const renderSeparator = () => <View style={styles.separator} />;
 
@@ -30,8 +34,25 @@ const renderEmpty = () => (
 );
 
 const GiftedChatListScreen = ({navigation}: GiftedChatListScreenProps) => {
-  const {state} = useUser();
+  const {state, dispatch} = useUser();
   const [messages, setMessages] = React.useState<Array<MessageProps>>([]);
+
+  const onLogout = () => {
+    Alert.alert('Đăng xuất', 'Bạn có chắc muốn đăng xuất ?', [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'OK',
+        onPress: () => {
+          dispatch({type: ActionType.LOGOUT});
+          navigation.goBack();
+        },
+      },
+    ]);
+    return true;
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -71,7 +92,19 @@ const GiftedChatListScreen = ({navigation}: GiftedChatListScreenProps) => {
     };
 
     fetchData();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.user.id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      BackHandler.addEventListener('hardwareBackPress', onLogout);
+      return () => {
+        BackHandler.removeEventListener('hardwareBackPress', onLogout);
+      };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []),
+  );
 
   const createChat = () => {
     navigation.navigate('NewChat');
@@ -84,7 +117,10 @@ const GiftedChatListScreen = ({navigation}: GiftedChatListScreenProps) => {
   const keyExtractor = (item: MessageProps) => item.id;
   return (
     <SafeAreaView style={styles.container}>
-      <NavigationBar title="Tin nhắn" hiddenBackButton={true}>
+      <NavigationBar
+        title="Tin nhắn"
+        hiddenBackButton={true}
+        onPressLogout={onLogout}>
         <View style={styles.searchContainer}>
           <FastImage source={ICONS.search} style={styles.searchIcon} />
           <TextInput placeholder="Tìm kiếm" style={styles.search} />
