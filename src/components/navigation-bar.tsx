@@ -4,8 +4,8 @@ import {
   ViewStyle,
   StyleSheet,
   TouchableOpacity,
-  Platform,
   Alert,
+  StatusBar,
 } from 'react-native';
 import React from 'react';
 import FastImage from 'react-native-fast-image';
@@ -59,6 +59,7 @@ const NavigationBar = (props: Props) => {
   return (
     <View style={styles.container}>
       <View style={[styles.navigationBar, containerStyle]}>
+        <StatusBar backgroundColor="#fff" barStyle="dark-content" />
         {/* Set background color and height if device has a touch bar */}
         <View style={styles.hiddenContainer} />
         {!hiddenBackButton && (
@@ -93,7 +94,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   navigationBar: {
-    height: Platform.OS === 'ios' ? 60 : 60 + 24,
+    height: 60,
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',

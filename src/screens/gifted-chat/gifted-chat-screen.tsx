@@ -1,6 +1,7 @@
 import React, {useCallback, useEffect, useRef} from 'react';
 import {
   ActivityIndicator,
+  Platform,
   SafeAreaView,
   StyleSheet,
   Text,
@@ -23,9 +24,11 @@ import {getAbbreviations} from '../../utils';
 import {ActionType} from '../../store/action';
 
 const GiftedChatScreen = ({route, navigation}: GiftedChatScreenProps) => {
-  const {chatId, partnerName, color} = route.params;
+  const {chatId, partnerName, color, partnerId} = route.params;
   const routes = navigation.getState()?.routes;
   const previosRoute = routes?.[routes.length - 2]?.name;
+  let newChatId = useRef(chatId);
+  const {state, dispatch} = useUser();
 
   const onBackPress = () => {
     if (previosRoute === 'GiftedChatList') {
@@ -37,8 +40,6 @@ const GiftedChatScreen = ({route, navigation}: GiftedChatScreenProps) => {
       });
     }
   };
-  let newChatId = useRef(chatId);
-  const {state, dispatch} = useUser();
 
   useEffect(() => {
     dispatch({type: ActionType.CLEAR_MESSAGES});
@@ -101,7 +102,9 @@ const GiftedChatScreen = ({route, navigation}: GiftedChatScreenProps) => {
       });
 
       if (!newChatId.current) {
-        const id = firestore().collection('chatMessages').doc().id;
+        const id = [state.user.id.slice(0, 10), partnerId.slice(0, 10)]
+          .sort()
+          .join('');
         newChatId.current = id;
         await firestore()
           .collection('chat')
@@ -110,7 +113,7 @@ const GiftedChatScreen = ({route, navigation}: GiftedChatScreenProps) => {
             createAt: firestore.Timestamp.fromDate(new Date()),
             isRead: false,
             members: [
-              firestore().collection('users').doc(route.params.partnerId),
+              firestore().collection('users').doc(partnerId),
               firestore().collection('users').doc(state.user.id),
             ],
             recentMessage: {
@@ -125,7 +128,7 @@ const GiftedChatScreen = ({route, navigation}: GiftedChatScreenProps) => {
             chatId: id,
             users: {
               [state.user.id]: null,
-              [route.params.partnerId]: null,
+              [partnerId]: null,
             },
           });
       }
@@ -239,7 +242,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingHorizontal: 18,
     flex: 1,
-    height: 80,
+    height: Platform.OS === 'ios' ? 80 : 50,
     alignItems: 'center',
   },
   avatar: {
